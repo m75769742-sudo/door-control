@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Контроль Табло</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #1a1a1a; color: white; }
+        .container { width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
+        button { width: 100%; padding: 25px; font-size: 1.4rem; font-weight: bold; cursor: pointer; border: none; border-radius: 15px; color: white; transition: 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        
+        .free { background: #28a745; }
+        .back-soon { background: #fd7e14; }
+        .remote { background: #6f42c1; }
+        
+        button:active { transform: scale(0.96); opacity: 0.9; }
+        .status-msg { margin-top: 20px; font-size: 0.9rem; color: #888; text-align: center; height: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <button class="free" onclick="sendUpdate('Away')">СВОБОДНО (Away)</button>
+        <button class="back-soon" onclick="sendUpdate('Back Soon')">СКОРО БУДУ</button>
+        <button class="remote" onclick="sendUpdate('Working Remotely')">УДАЛЕННО</button>
+        <div id="status" class="status-msg">Нажмите кнопку для смены</div>
+    </div>
+
+    <script>
+        const API_KEY = '2LaZR81dZ_i0tLzJf6P6ri32S2mR_GHJc89J4yeMVC97AlT3ztmCAfZwOGyLSHCQ'; // <-- ВСТАВЬТЕ СЮДА КЛЮЧ
+        const SCREEN_ID = '712658';
+
+        async function sendUpdate(contentName) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerText = 'Отправка...';
+            
+            const url = `https://app.yodeck.com/api/v1/screens/${SCREEN_ID}/`;
+            const data = { "content": contentName };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `X-API-Key ${API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    statusDiv.style.color = '#28a745';
+                    statusDiv.innerText = 'Готово! Статус обновлен.';
+                } else {
+                    const errorMsg = await response.text();
+                    statusDiv.style.color = '#dc3545';
+                    statusDiv.innerText = 'Ошибка API: ' + response.status;
+                }
+            } catch (error) {
+                statusDiv.style.color = '#dc3545';
+                statusDiv.innerText = 'Ошибка сети';
+            }
+            
+            setTimeout(() => { statusDiv.innerText = ''; }, 3000);
+        }
+    </script>
+</body>
+</html>
