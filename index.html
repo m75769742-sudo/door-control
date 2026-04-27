@@ -25,17 +25,16 @@
     </div>
 
     <script>
-        // ВНИМАНИЕ: Вставьте свой API Key между кавычек ниже
         const API_KEY = '2LaZR81dZ_i0tLzJf6P6ri32S2mR_GHJc89J4yeMVC97AlT3ztmCAfZwOGyLSHCQ'; 
-        const SCREEN_ID = '712658';
+        const SCREEN_ID = '712658'; 
 
         async function sendUpdate(contentName) {
             const statusDiv = document.getElementById('status');
             statusDiv.style.color = "white";
             statusDiv.innerText = 'Отправка...';
 
-            // Используем прокси для обхода CORS
             const proxy = 'https://corsproxy.io/?';
+            // Используем базовый URL без лишних параметров для начала
             const targetUrl = `https://app.yodeck.com/api/v1/screens/${SCREEN_ID}/`;
             const finalUrl = proxy + encodeURIComponent(targetUrl);
 
@@ -46,13 +45,18 @@
                         'X-API-Key': API_KEY,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ "content": contentName })
+                    // Упрощаем тело запроса до самого базового уровня, который принимает Yodeck
+                    body: JSON.stringify({ 
+                        "content": contentName 
+                    })
                 });
 
                 if (response.ok) {
                     statusDiv.style.color = "#28a745";
                     statusDiv.innerText = 'Успешно! Видео меняется.';
                 } else {
+                    const errorText = await response.text();
+                    console.log(errorText); // Для отладки в консоли
                     statusDiv.style.color = "#dc3545";
                     statusDiv.innerText = 'Ошибка API: ' + response.status;
                 }
