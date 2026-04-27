@@ -3,90 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Контроль Табло</title>
+    <title>Пульт: Дверь Кабинета</title>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #1a1a1a; color: white; padding: 20px; }
-        .container { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 10px; }
-        button { width: 100%; padding: 25px; font-size: 1.3rem; font-weight: bold; cursor: pointer; border: none; border-radius: 15px; color: white; transition: 0.2s; }
-        .free { background: #28a745; }
-        .back-soon { background: #fd7e14; }
-        .remote { background: #6f42c1; }
-        .diag { background: #444; margin-top: 30px; font-size: 0.8rem; opacity: 0.7; }
-        #status { margin-top: 20px; text-align: center; font-size: 1rem; min-height: 50px; white-space: pre-wrap; }
-        button:active { transform: scale(0.95); }
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #121212; color: white; }
+        .container { width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
+        button { width: 100%; padding: 30px; font-size: 1.5rem; font-weight: bold; cursor: pointer; border: none; border-radius: 20px; color: white; transition: 0.2s; }
+        .btn-away { background: #28a745; }
+        .btn-soon { background: #fd7e14; }
+        .btn-remote { background: #6f42c1; }
+        button:active { transform: scale(0.95); opacity: 0.8; }
+        #status { margin-top: 25px; font-size: 1.1rem; text-align: center; min-height: 30px; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <button class="free" onclick="sendUpdate('Away')">СВОБОДНО</button>
-        <button class="back-soon" onclick="sendUpdate('Back Soon')">СКОРО БУДУ</button>
-        <button class="remote" onclick="sendUpdate('Working Remotely')">УДАЛЕННО</button>
-        
-        <button class="diag" onclick="getIds()">🔍 ПРОВЕРИТЬ СВЯЗЬ</button>
-        
-        <div id="status">Готов к работе</div>
+        <button class="btn-away" onclick="send('Away')">СВОБОДНО</button>
+        <button class="btn-soon" onclick="send('Back Soon')">СКОРО БУДУ</button>
+        <button class="btn-remote" onclick="send('Working Remotely')">УДАЛЕННО</button>
+        <div id="status">Система готова</div>
     </div>
 
     <script>
-        // ВАЖНО: Вставьте МАСТЕР-КЛЮЧ из User Settings
-        const API_KEY = 'Wo5vf6OZLaOYwLoGfAA0O29am9O9mM9Gxs2WyB8TGsJBW5aq_cArhbha4H4rFTTZ'; 
-        const SCREEN_ID = '712658';
+        async function send(contentName) {
+            const status = document.getElementById('status');
+            status.style.color = "white";
+            status.innerText = 'Отправка команды...';
 
-        async function sendUpdate(contentName) {
-            const statusDiv = document.getElementById('status');
-            statusDiv.style.color = "white";
-            statusDiv.innerText = 'Связываюсь с дверью...';
-
-            // Используем прокси-сервер "ThingSpeak", он очень лоялен к заголовкам
-            const url = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://app.yodeck.com/api/v1/screens/${SCREEN_ID}/`)}`;
+            // ВСТАВЬТЕ ВАШУ ССЫЛКУ ИЗ GOOGLE МЕЖДУ КАВЫЧЕК
+            const webAppUrl = 'https://script.google.com/macros/s/AKfycbwNZHCy7m6KtZF5wcb3S5Yfry2ZZZUYZA3npnRanRhEdpdwf4eQvVKceBv0MQoR02uS/exec';
 
             try {
-                // Попробуем сначала через самый простой прокси-сервер
-                const response = await fetch(`https://cors-anywhere.herokuapp.com/https://app.yodeck.com/api/v1/screens/${SCREEN_ID}/`, {
-                    method: 'PATCH',
-                    headers: {
-                        'X-API-Key': API_KEY,
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify({ "content": contentName })
-                }).catch(() => fetch(`https://corsproxy.io/?${encodeURIComponent(`https://app.yodeck.com/api/v1/screens/${SCREEN_ID}/`)}`, {
-                    method: 'PATCH',
-                    headers: { 'X-API-Key': API_KEY, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ "content": contentName })
-                }));
-
+                const response = await fetch(webAppUrl + '?content=' + encodeURIComponent(contentName));
                 if (response.ok) {
-                    statusDiv.style.color = "#28a745";
-                    statusDiv.innerText = 'ГОТОВО! Табло обновится через пару секунд.';
+                    status.style.color = "#28a745";
+                    status.innerText = 'УСПЕШНО! Видео меняется.';
                 } else {
-                    statusDiv.style.color = "#dc3545";
-                    statusDiv.innerText = 'Сервер ответил: ' + response.status;
+                    status.style.color = "#dc3545";
+                    status.innerText = 'Ошибка скрипта';
                 }
             } catch (e) {
-                statusDiv.innerText = 'Ошибка сети. Попробуйте еще раз.';
-            }
-        }
-
-        async function getIds() {
-            const statusDiv = document.getElementById('status');
-            statusDiv.innerText = 'Проверка доступа...';
-            
-            try {
-                const response = await fetch(`https://corsproxy.io/?${encodeURIComponent('https://app.yodeck.com/api/v1/media/')}`, {
-                    headers: { 'X-API-Key': API_KEY }
-                });
-                const data = await response.json();
-                if (data.results) {
-                    statusDiv.style.color = "#28a745";
-                    statusDiv.innerText = 'СВЯЗЬ ЕСТЬ!\nНайдены файлы: ' + data.results.length;
-                } else {
-                    statusDiv.innerText = 'Ключ принят, но файлы не найдены.';
-                }
-            } catch (e) {
-                statusDiv.style.color = "#dc3545";
-                statusDiv.innerText = 'Блокировка. Попробуйте нажать кнопку на телефоне.';
+                status.style.color = "#dc3545";
+                status.innerText = 'Ошибка сети';
             }
         }
     </script>
